@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<project default="init" basedir=".">
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="lib/ant-contrib-1.0b3.jar"/>
+		</classpath>
+	</taskdef>
+
+	<fail message="Please upgrade Ant to version 1.8.2. Running version is ${ant.version}">
+		<condition>
+			<not>
+				<contains string="${ant.version}" substring="1.8.2"/>
+			</not>
+		</condition>
+	</fail>
+
+	<!-- Specify the server.name property via the Ant options -->
+	<property file="${server.name}.properties"/>
+	
+	<!-- The user.name system property is provided by the JVM, which reads the environment variable %USERNAME% or $USER -->
+	<property file="${user.name}.properties"/>
+
+	<property name="project.build" location="."/>
+	<property name="project.test" location="../test"/>
+	<property name="project.src" location="../src"/>
+	<property name="project.lib" location="../lib"/>
+	<property name="project.work" location="../work"/>
+	<property name="project.results" location="${project.build}/results"/>
+
+	<!-- Tomcat -->
+	<property name="tomcat.home" location="c:/tomcat"/>
+	<property name="tomcat.vhosts" location="${tomcat.home}/vhosts"/>
+	<property name="tomcat.docbase" value="automaton"/>
+
+	<!-- CFML Engine -->
+	<property name="cfml.engine" value="railo-3.3"/>
+	<property name="cfml.engine.root" location="${tomcat.vhosts}/${tomcat.docbase}"/>
+	<property name="cfml.engine.webinf" location="${cfml.engine.root}/WEB-INF"/>
+	<property name="cfml.engine.webroot" value="${cfml.engine.root}"/>
+
+	<!-- ColdBox -->
+	<property name="coldbox.dist" location="${project.lib}/coldbox-standalone-3.5.0.zip"/>
+	
+	<!-- The webapp properties are used by MX Unit and VarScoper -->
+	<property name="webapp.server" value="${deploy.hostname}"/>
+	<property name="webapp.port" value="${deploy.port}"/>
+	<property name="webapp.path" location="${cfml.engine.webroot}"/>
+
+	<!-- MX Unit -->
+	<property name="mxunit.jar" location="${project.build}/lib/mxunit-ant.jar"/>
+	<property name="mxunit.dist" location="${project.lib}/mxunit-framework-2.1.0.zip"/>
+	<property name="mxunit.outputdir" location="${project.results}"/>
+	<property name="mxunit.timeout" value="300"/>
+	<property name="mxunit.runner" value="/test/resources/HttpAntRunner.cfc?requestTimeout=${mxunit.timeout}"/>
+
+	<!-- VarScoper -->
+	<property name="varscoper.dist" location="${project.lib}/varscoper4.zip"/>
+	<property name="varscoper.url" value="http://${webapp.server}:${webapp.port}/test/varscoper/varScoper.cfm"/>
+	<property name="varscoper.path" value="${webapp.path}/model"/>
+	<property name="varscoper.recurse" value="true"/>
+	<property name="varscoper.outputfile" location="${project.results}/varscoper.csv"/>
+
+	<!-- ColdDoc -->
+	<property name="colddoc.dist" location="${project.lib}/colddoc_v1.0.zip"/>
+	<property name="colddoc.output" value="${java.io.tmpdir}/colddoc.html"/>
+
+	<!-- Build Environment -->
+	<property name="build.environment.name" value="production"/>
+	<if>
+		<equals arg1="${deploy.port}" arg2="80"/>
+		<then>
+			<property name="build.base.url" value="http://${deploy.hostname}/"/>
+		</then>
+		<else>
+			<property name="build.base.url" value="http://${deploy.hostname}:${deploy.port}/"/>
+		</else>
+	</if>
+	
+
+	<target name="init" description="Initialize build and perform sanity check.">
+		<echo message="Starting Ant from ${basedir} by user ${user.name}"/>
+
+		<fail message="The CFML engine root (${cfml.engine.root}) does not exist.">
+			<condition>
+				<not>
+					<available file="${cfml.engine.root}" type="dir"/>
+				</not>
+			</condition>
+		</fail>
+		<fail message="The CFML engine webroot (${cfml.engine.webroot}) does not exist.">
+			<condition>
+				<not>
+					<available file="${cfml.engine.webroot}" type="dir"/>
+				</not>
+			</condition>
+		</fail>
+	</target>
+
+	<target name="deploy-app" depends="init" description="Deploy application to server.">
+		<echo message="Deploying the application to ${cfml.engine.webroot}"/>
+		
+		<copy todir="${cfml.engine.webroot}/config" overwrite="true">
+			<fileset dir="${project.src}/config">
+				<include name="*.cfc"/>
+				<include name="*.cfm"/>
+			</fileset>
+			<filterset>
+				<filter token="RELEASE" value=""/>
+				<filter token="BUILD_ENVIRONMENT_NAME" value="${build.environment.name}"/>
+				<filter token="BUILD_BASE_URL" value="${build.base.url}"/>
+			</filterset>
+		</copy>
+		<copy todir="${cfml.engine.webroot}" overwrite="true">
+			<fileset dir="${project.src}">
+				<include name="Application.cfc"/>
+			</fileset>
+			<filterset>
+				<filter token="DSN_NAME" value="${dsn.name}"/>
+			</filterset>
+		</copy>
+		<copy todir="${cfml.engine.webroot}" overwrite="true">
+			<fileset dir="${project.src}">
+				<exclude name="build/"/>
+				<exclude name="config/"/>
+				<exclude name="lib/"/>
+				<exclude name=".*"/>
+				<exclude name="Application.cfc"/>
+				<exclude name="settings.xml"/>
+			</fileset>
+		</copy>
+		
+		<delete dir="${project.work}">
+			<include name="**/*"/>
+		</delete>
+	</target>
+	
+	<target name="deploy-libs" depends="init">
+		<delete dir="${cfml.engine.webroot}/coldbox"/>
+		<unzip src="${coldbox.dist}" dest="${cfml.engine.webroot}/coldbox"/>
+	</target>
+
+	<target name="deploy-unittests" depends="init">
+		<delete dir="${cfml.engine.webroot}/mxunit"/>
+		<unzip src="${mxunit.dist}" dest="${cfml.engine.webroot}/mxunit"/>
+		
+		<copy todir="${cfml.engine.webroot}" overwrite="true">
+			<fileset dir="${project.src}">
+				<include name="Application.cfc"/>
+			</fileset>
+			<filterset>
+				<filter token="DSN_NAME" value="${dsn.name}"/>
+			</filterset>
+		</copy>
+		<copy todir="${cfml.engine.webroot}" overwrite="true">
+			<fileset dir="${project.src}">
+				<exclude name="build/"/>
+				<exclude name="config/"/>
+				<exclude name="lib/"/>
+				<exclude name=".*"/>
+				<exclude name="Application.cfc"/>
+				<exclude name="settings.xml"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="deploy-varscoper" depends="init">
+		<delete dir="${cfml.engine.webroot}/test/varscoper"/>
+		<mkdir dir="${cfml.engine.webroot}/test/varscoper"/>
+		<touch file="${cfml.engine.webroot}/test/varscoper/Application.cfc"/>
+		<unzip src="${project.lib}/varscoper4.zip" dest="${cfml.engine.webroot}/test/varscoper">
+			<patternset>
+				<include name="display*.cfm"/>
+				<include name="fileDisplay.cfm"/>
+				<include name="index.cfm"/>
+				<include name="license.txt"/>
+				<include name="varScoper*.cf?"/>
+			</patternset>
+		</unzip>
+	</target>
+
+	<target name="deploy-colddoc" depends="init">
+		<delete dir="${cfml.engine.webroot}/colddoc"/>
+		<unzip src="${project.lib}/colddoc_v1.0.zip" dest="${cfml.engine.webroot}/colddoc">
+			<patternset>
+				<include name="colddoc/license.txt"/>
+				<include name="colddoc/ColdDoc.cfc"/>
+				<include name="colddoc/strategy/**"/>
+			</patternset>
+			<regexpmapper from="^colddoc/(.+)$$" to="\1"/>
+		</unzip>
+	</target>
+	
+	<target name="deploy-railo" depends="init">
+		<delete dir="${tomcat.vhosts}/${tomcat.docbase}">
+			<patternset>
+				<include name="WEB-INF/**"/>
+				<exclude name="WEB-INF/railo/railo-web.xml.cfm"/>
+				<exclude name="WEB-INF/lib/railo-server/context/railo-server.xml"/>
+			</patternset>
+		</delete>
+		<unwar src="${project.lib}/railo/railo-3.3.1.000.war" dest="${tomcat.vhosts}/${tomcat.docbase}">
+			<patternset>
+				<include name="WEB-INF/**"/>
+			</patternset>
+		</unwar>
+		<copy todir="${cfml.engine.webinf}" overwrite="true">
+			<fileset dir="${project.src}/config/railo">
+				<include name="*.xml"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="update-railo" depends="init">
+		<copy todir="${cfml.engine.webinf}/lib/railo-server/patches" overwrite="true">
+			<fileset dir="${project.lib}/railo">
+				<include name="*.rc"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="undeploy" depends="init" description="Remove a deployed copy of the application and libraries.">
+		<echo message="Undeploying from ${cfml.engine.webroot}"/>
+		<delete includeemptydirs="true">
+			<fileset dir="${cfml.engine.webroot}">
+				<include name="**/*"/>
+				<exclude name="WEB-INF/"/>
+			</fileset>
+		</delete>
+	</target>
+	
+	<target name="test-unittests" depends="init">
+		<taskdef name="mxunittask" classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}"/>
+
+		<delete dir="${test.results}"/>
+		<mkdir dir="${test.results}"/>
+		<mxunittask server="${webapp.server}" port="${webapp.port}" outputdir="${mxunit.outputdir}" defaultrunner="${mxunit.runner}">
+			<directory path="${webapp.path}/test/unit" recurse="true" componentPath="test.unit"/>
+		</mxunittask>
+	</target>
+
+	<target name="test-varscoper" depends="init">
+		<get src="${varscoper.url}?displayformat=csv&amp;filePath=${varscoper.path}&amp;recursiveDirectory=${varscoper.recurse}" dest="${varscoper.outputfile}" verbose="false"/>
+
+		<loadfile srcfile="${varscoper.outputfile}" property="varscoper.csv">
+			<filterchain>
+				<headfilter skip="1"/>
+				<trim/>
+			</filterchain>
+		</loadfile>
+
+		<fail message="CFML var scope violation is found.">
+			<condition>
+				<isset property="varscoper.csv"/>
+			</condition>
+		</fail>
+	</target>
+
+	<target name="colddoc-html" depends="init" description="Deploy the mini-app and run it to generate HTML documentation in Javadoc style.">
+		<copy todir="${cfml.engine.webroot}" overwrite="true">
+			<fileset dir="${project.src}">
+				<include name="doc/**"/>
+			</fileset>
+		</copy>
+		
+		<get src="http://${webapp.server}:${webapp.port}/doc/generate.cfm" dest="${colddoc.output}" verbose="false"/>
+	</target>
+
+</project>

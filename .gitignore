@@ -1,0 +1,5 @@
+dist
+temp
+build/work
+build/results
+.DS_Store
