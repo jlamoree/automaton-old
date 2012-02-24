@@ -1,1 +1,1 @@
-<cfoutput>#now()#</cfoutput>
+<!--- ColdBox Framework placeholder file --->
