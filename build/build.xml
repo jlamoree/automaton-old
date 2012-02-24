@@ -40,6 +40,9 @@
 	<property name="cfml.engine.webinf" location="${cfml.engine.root}/WEB-INF"/>
 	<property name="cfml.engine.webroot" value="${cfml.engine.root}"/>
 
+	<!-- Railo -->
+	<property name="railo.server.path" location="${cfml.engine.webinf}/lib/railo-server"/>
+
 	<!-- ColdBox -->
 	<property name="coldbox.dist" location="${project.lib}/coldbox-standalone-3.5.0.zip"/>
 	
@@ -213,8 +216,8 @@
 	</target>
 	
 	<target name="update-railo" depends="init">
-		<copy todir="${cfml.engine.webinf}/lib/railo-server/patches" overwrite="true">
-			<fileset dir="${project.lib}/railo">
+		<copy todir="${railo.server.path}/patches" overwrite="true">
+			<fileset dir="${project.lib}">
 				<include name="*.rc"/>
 			</fileset>
 		</copy>
