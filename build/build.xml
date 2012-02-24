@@ -42,6 +42,10 @@
 
 	<!-- Railo -->
 	<property name="railo.server.path" location="${cfml.engine.webinf}/lib/railo-server"/>
+	<property name="railo.dist" location="${project.lib}/railo-3.3.1.war"/>
+	
+	<!-- Open BlueDragon -->
+	<property name="openbluedragon.dist" location="${project.lib}/openbluedragon-2.0.2.war"/>
 
 	<!-- ColdBox -->
 	<property name="coldbox.dist" location="${project.lib}/coldbox-standalone-3.5.0.zip"/>
@@ -50,6 +54,7 @@
 	<property name="webapp.server" value="${deploy.hostname}"/>
 	<property name="webapp.port" value="${deploy.port}"/>
 	<property name="webapp.path" location="${cfml.engine.webroot}"/>
+	<property name="webapp.datasource" location="automaton"/>
 
 	<!-- MX Unit -->
 	<property name="mxunit.jar" location="${project.build}/lib/mxunit-ant.jar"/>
@@ -69,15 +74,19 @@
 	<property name="colddoc.dist" location="${project.lib}/colddoc_v1.0.zip"/>
 	<property name="colddoc.output" value="${java.io.tmpdir}/colddoc.html"/>
 
-	<!-- Build Environment -->
-	<property name="build.environment.name" value="production"/>
+	<!-- Deploy -->
+	<tstamp>
+		<format property="deploy.release" pattern="yyyyMMdd"/>
+	</tstamp>
+	<property name="deploy.hostname" value="automaton"/>
+	<property name="deploy.port" value="80"/>
 	<if>
 		<equals arg1="${deploy.port}" arg2="80"/>
 		<then>
-			<property name="build.base.url" value="http://${deploy.hostname}/"/>
+			<property name="deploy.baseurl" value="http://${deploy.hostname}/"/>
 		</then>
 		<else>
-			<property name="build.base.url" value="http://${deploy.hostname}:${deploy.port}/"/>
+			<property name="deploy.baseurl" value="http://${deploy.hostname}:${deploy.port}/"/>
 		</else>
 	</if>
 	
@@ -110,9 +119,9 @@
 				<include name="*.cfm"/>
 			</fileset>
 			<filterset>
-				<filter token="RELEASE" value=""/>
-				<filter token="BUILD_ENVIRONMENT_NAME" value="${build.environment.name}"/>
-				<filter token="BUILD_BASE_URL" value="${build.base.url}"/>
+				<filter token="RELEASE" value="${deploy.release}"/>
+				<filter token="DEPLOY_BASEURL" value="${deploy.baseurl}"/>
+				<filter token="DATASOURCE" value="${webapp.datasource}"/>
 			</filterset>
 		</copy>
 		<copy todir="${cfml.engine.webroot}" overwrite="true">
@@ -120,7 +129,7 @@
 				<include name="Application.cfc"/>
 			</fileset>
 			<filterset>
-				<filter token="DSN_NAME" value="${dsn.name}"/>
+				<filter token="DATASOURCE" value="${webapp.datasource}"/>
 			</filterset>
 		</copy>
 		<copy todir="${cfml.engine.webroot}" overwrite="true">
@@ -203,7 +212,7 @@
 				<exclude name="WEB-INF/lib/railo-server/context/railo-server.xml"/>
 			</patternset>
 		</delete>
-		<unwar src="${project.lib}/railo/railo-3.3.1.000.war" dest="${tomcat.vhosts}/${tomcat.docbase}">
+		<unwar src="${railo.dist}" dest="${tomcat.vhosts}/${tomcat.docbase}">
 			<patternset>
 				<include name="WEB-INF/**"/>
 			</patternset>
@@ -219,6 +228,27 @@
 		<copy todir="${railo.server.path}/patches" overwrite="true">
 			<fileset dir="${project.lib}">
 				<include name="*.rc"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="deploy-openbluedragon" depends="init">
+		<delete dir="${tomcat.vhosts}/${tomcat.docbase}">
+			<patternset>
+				<include name="WEB-INF/**"/>
+				<!--
+				<exclude name="WEB-INF/railo/railo-web.xml.cfm"/>
+				-->
+			</patternset>
+		</delete>
+		<unwar src="${openbluedragon.dist}" dest="${tomcat.vhosts}/${tomcat.docbase}">
+			<patternset>
+				<include name="WEB-INF/**"/>
+			</patternset>
+		</unwar>
+		<copy todir="${cfml.engine.webinf}" overwrite="true">
+			<fileset dir="${project.src}/config/openbluedragon">
+				<include name="*.xml"/>
 			</fileset>
 		</copy>
 	</target>
