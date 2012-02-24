@@ -203,7 +203,7 @@
 				<exclude name="WEB-INF/lib/railo-server/context/railo-server.xml"/>
 			</patternset>
 		</delete>
-		<unwar src="${project.lib}/railo/railo-3.3.1.000.war" dest="${tomcat.vhosts}/${tomcat.docbase}">
+		<unwar src="${project.lib}/railo-3.3.1.000.war" dest="${tomcat.vhosts}/${tomcat.docbase}">
 			<patternset>
 				<include name="WEB-INF/**"/>
 			</patternset>
