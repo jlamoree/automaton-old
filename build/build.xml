@@ -222,7 +222,7 @@
 				<filter token="NGINX_APP_PORT" value="${nginx.app.port}"/>
 				<filter token="NGINX_APP_SERVER" value="${nginx.app.server}"/>
 				<!-- Different for Windows vs. non-Windows -->
-				<filter token="NGINX_APP_WEBROOT" value="${deploy.nginx.app.webroot}"/>
+				<filter token="NGINX_APP_WEBROOT" value="${nginx.app.webroot}"/>
 				<filter token="APP_PROXY_ENABLED" value="${http.appProxy.enabled}"/>
 				<filter token="APP_PROXY_SERVER_HOST_HEADER_NAME" value="${http.appProxy.serverHostHeaderName}"/>
 				<filter token="APP_PROXY_SERVER_ADDRESS_HEADER_NAME" value="${http.appProxy.serverAddressHeaderName}"/>
