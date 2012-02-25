@@ -40,6 +40,17 @@
 	<property name="cfml.engine.webinf" location="${cfml.engine.root}/WEB-INF"/>
 	<property name="cfml.engine.webroot" value="${cfml.engine.root}"/>
 
+	<!-- Nginx -->
+	<property name="nginx.root" value="C:/nginx"/>
+	<property name="nginx.exec" value="${nginx.root}/nginx.exe"/>
+	<property name="nginx.conf" value="${nginx.root}/conf.d"/>
+	<property name="nginx.port" value="80"/>
+	<property name="nginx.hostname" value="automaton.com"/>
+	<property name="nginx.log.path" value="logs"/>
+	<property name="nginx.app.port" value="8500"/>
+	<property name="nginx.app.server" value="127.0.0.1"/>
+	<property name="nginx.app.webroot" value="${cfml.engine.webroot}"/>
+
 	<!-- Railo -->
 	<property name="railo.server.path" location="${cfml.engine.webinf}/lib/railo-server"/>
 	<property name="railo.dist" location="${project.lib}/railo-3.3.1.war"/>
@@ -74,7 +85,7 @@
 	<property name="colddoc.dist" location="${project.lib}/colddoc_v1.0.zip"/>
 	<property name="colddoc.output" value="${java.io.tmpdir}/colddoc.html"/>
 
-	<!-- Deploy -->
+	<!-- Deploy information -->
 	<tstamp>
 		<format property="deploy.release" pattern="yyyyMMdd"/>
 	</tstamp>
@@ -89,7 +100,15 @@
 			<property name="deploy.baseurl" value="http://${deploy.hostname}:${deploy.port}/"/>
 		</else>
 	</if>
-	
+
+	<!-- HTTP Headers -->
+	<property name="http.appProxy.enabled" value="true"/>
+	<property name="http.appProxy.serverHostHeaderName" value="X-Forwarded-Server-Host"/>
+	<property name="http.appProxy.serverAddressHeaderName" value="X-Forwarded-Server-IP"/>
+	<property name="http.appProxy.serverPortHeaderName" value="X-Forwarded-Server-Port"/>
+	<property name="http.appProxy.clientAddressHeaderName" value="X-Forwarded-Client-IP"/>
+	<property name="http.appProxy.secureEndpointHeaderName" value="X-Forwarded-Secure-Endpoint"/>	
+
 
 	<target name="init" description="Initialize build and perform sanity check.">
 		<echo message="Starting Ant from ${basedir} by user ${user.name}"/>
@@ -139,9 +158,24 @@
 				<exclude name="lib/"/>
 				<exclude name=".*"/>
 				<exclude name="Application.cfc"/>
+				<exclude name="ConnectionInspector.cfc"/>
 				<exclude name="settings.xml"/>
 			</fileset>
 		</copy>
+		<copy todir="${cfml.engine.webroot}" overwrite="true">
+			<fileset dir="${project.src}">
+				<include name="ConnectionInspector.cfc"/>
+			</fileset>
+			<filterset>
+				<filter token="APP_PROXY_ENABLED" value="${http.appProxy.enabled}"/>
+				<filter token="APP_PROXY_SERVER_HOST_HEADER_NAME" value="${http.appProxy.serverHostHeaderName}"/>
+				<filter token="APP_PROXY_SERVER_ADDRESS_HEADER_NAME" value="${http.appProxy.serverAddressHeaderName}"/>
+				<filter token="APP_PROXY_SERVER_PORT_HEADER_NAME" value="${http.appProxy.serverPortHeaderName}"/>
+				<filter token="APP_PROXY_CLIENT_ADDRESS_HEADER_NAME" value="${http.appProxy.clientAddressHeaderName}"/>
+				<filter token="APP_PROXY_SECURE_ENDPOINT_HEADER_NAME" value="${http.appProxy.secureEndpointHeaderName}"/>
+			</filterset>
+		</copy>
+		
 		
 		<delete dir="${project.work}">
 			<include name="**/*"/>
@@ -151,6 +185,49 @@
 	<target name="deploy-libs" depends="init">
 		<delete dir="${cfml.engine.webroot}/coldbox"/>
 		<unzip src="${coldbox.dist}" dest="${cfml.engine.webroot}/coldbox"/>
+	</target>
+
+	<target name="deploy-nginx">
+		<if>
+			<os family="windows"/>
+			<then>
+				<propertycopy property="deploy.nginx.conf" from="nginx.conf"/>
+				<propertycopy property="deploy.nginx.app.webroot" from="nginx.app.webroot"/>
+				<propertyregex property="deploy.nginx.app.webroot" input="${nginx.app.webroot}" regexp="\\" replace="/" override="true" global="true"/>
+			</then>
+			<else>
+				<propertycopy property="deploy.nginx.app.webroot" from="nginx.app.webroot"/>
+				<property name="deploy.nginx.conf" location="${project.work}/nginx"/>
+				<mkdir dir="${deploy.nginx.conf}"/>
+			</else>
+		</if>
+		
+		<copy todir="${deploy.nginx.conf}" overwrite="true">
+			<fileset dir="${project.src}/config/nginx">
+				<include name="automaton.conf"/>
+			</fileset>
+			<filterset>
+				<filter token="NGINX_PORT" value="${nginx.port}"/>
+				<filter token="NGINX_HOSTNAME" value="${nginx.hostname}"/>
+				<filter token="NGINX_LOG_PATH" value="${nginx.log.path}"/>
+				<filter token="NGINX_APP_PORT" value="${nginx.app.port}"/>
+				<filter token="NGINX_APP_SERVER" value="${nginx.app.server}"/>
+				<filter token="NGINX_APP_WEBROOT" value="${deploy.nginx.app.webroot}"/>
+				<filter token="APP_PROXY_ENABLED" value="${http.appProxy.enabled}"/>
+				<filter token="APP_PROXY_SERVER_HOST_HEADER_NAME" value="${http.appProxy.serverHostHeaderName}"/>
+				<filter token="APP_PROXY_SERVER_ADDRESS_HEADER_NAME" value="${http.appProxy.serverAddressHeaderName}"/>
+				<filter token="APP_PROXY_SERVER_PORT_HEADER_NAME" value="${http.appProxy.serverPortHeaderName}"/>
+				<filter token="APP_PROXY_CLIENT_ADDRESS_HEADER_NAME" value="${http.appProxy.clientAddressHeaderName}"/>
+				<filter token="APP_PROXY_SECURE_ENDPOINT_HEADER_NAME" value="${http.appProxy.secureEndpointHeaderName}"/>
+			</filterset>
+		</copy>
+		
+		<if>
+			<os family="mac"/>
+			<then>
+				<echo message="Nginx configuration file created in ${deploy.nginx.conf}."/>
+			</then>
+		</if>		
 	</target>
 
 	<target name="deploy-unittests" depends="init">
