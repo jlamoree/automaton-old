@@ -196,11 +196,15 @@
 
 				<!-- Copy the Nginx Windows Service files into place -->
 				<property name="deploy.nginx.conf" value="${nginx.conf}"/>
-				<copy file="${project.src}/config/nginx/service.xml" tofile="${nginx.root}/service/nginx.xml" overwrite="true">
+				<copy todir="${nginx.root}/service" overwrite="true">
+					<fileset dir="${project.src}/config/nginx">
+						<include name="service.xml"/>
+					</fileset>
 					<filterset>
 						<filter token="NGINX_EXEC" value="${nginx.exec}"/>
 						<filter token="NGINX_ROOT" value="${nginx.root}"/>
 					</filterset>
+					<globmapper from="service.*" to="nginx.*"/>
 				</copy>
 				<copy file="${project.lib}/winsw.exe" tofile="${nginx.root}/service/nginx.exe"/>
 			</then>
