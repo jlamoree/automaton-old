@@ -41,9 +41,9 @@
 	<property name="cfml.engine.webroot" value="${cfml.engine.root}"/>
 
 	<!-- Nginx -->
-	<property name="nginx.root" value="C:/nginx"/>
-	<property name="nginx.exec" value="${nginx.root}/nginx.exe"/>
-	<property name="nginx.conf" value="${nginx.root}/conf.d"/>
+	<property name="nginx.root" value="C:\nginx"/>
+	<property name="nginx.exec" value="${nginx.root}\nginx.exe"/>
+	<property name="nginx.conf" value="${nginx.root}\conf"/>
 	<property name="nginx.port" value="80"/>
 	<property name="nginx.hostname" value="automaton.com"/>
 	<property name="nginx.log.path" value="logs"/>
@@ -191,13 +191,22 @@
 		<if>
 			<os family="windows"/>
 			<then>
-				<propertycopy property="deploy.nginx.conf" from="nginx.conf"/>
-				<propertycopy property="deploy.nginx.app.webroot" from="nginx.app.webroot"/>
-				<propertyregex property="deploy.nginx.app.webroot" input="${nginx.app.webroot}" regexp="\\" replace="/" override="true" global="true"/>
+				<!-- The Nginx configuration file (used outside this condition) needs directory separaters switched to slashes -->
+				<propertyregex property="nginx.app.webroot" input="${nginx.app.webroot}" regexp="\\" replace="/" override="true" global="true"/>
+
+				<!-- Copy the Nginx Windows Service files into place -->
+				<property name="deploy.nginx.conf" value="${nginx.conf}"/>
+				<copy file="${project.src}/config/nginx/service.xml" tofile="${nginx.root}/service/nginx.xml" overwrite="true">
+					<filterset>
+						<filter token="NGINX_EXEC" value="${nginx.exec}"/>
+						<filter token="NGINX_ROOT" value="${nginx.root}"/>
+					</filterset>
+				</copy>
+				<copy file="${project.lib}/winsw.exe" tofile="${nginx.root}/service/nginx.exe"/>
 			</then>
 			<else>
-				<propertycopy property="deploy.nginx.app.webroot" from="nginx.app.webroot"/>
-				<property name="deploy.nginx.conf" location="${project.work}/nginx"/>
+				<!-- We'll place the Nginx configuration for non-Windows environments in the work path -->
+				<property name="deploy.nginx.conf" value="${project.work}/nginx"/>
 				<mkdir dir="${deploy.nginx.conf}"/>
 			</else>
 		</if>
@@ -212,7 +221,8 @@
 				<filter token="NGINX_LOG_PATH" value="${nginx.log.path}"/>
 				<filter token="NGINX_APP_PORT" value="${nginx.app.port}"/>
 				<filter token="NGINX_APP_SERVER" value="${nginx.app.server}"/>
-				<filter token="NGINX_APP_WEBROOT" value="${deploy.nginx.app.webroot}"/>
+				<!-- Different for Windows vs. non-Windows -->
+				<filter token="NGINX_APP_WEBROOT" value="${nginx.app.webroot}"/>
 				<filter token="APP_PROXY_ENABLED" value="${http.appProxy.enabled}"/>
 				<filter token="APP_PROXY_SERVER_HOST_HEADER_NAME" value="${http.appProxy.serverHostHeaderName}"/>
 				<filter token="APP_PROXY_SERVER_ADDRESS_HEADER_NAME" value="${http.appProxy.serverAddressHeaderName}"/>
