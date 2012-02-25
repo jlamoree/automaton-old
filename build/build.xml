@@ -348,7 +348,7 @@
 		<delete dir="${project.results}"/>
 		<mkdir dir="${project.results}"/>
 		<mxunittask server="${webapp.server}" port="${webapp.port}" outputdir="${mxunit.outputdir}" defaultrunner="${mxunit.runner}">
-			<directory path="${webapp.path}/test/unit" recurse="true" componentPath="test.model"/>
+			<directory path="${webapp.path}/test/unit" recurse="true" componentPath="test.unit"/>
 		</mxunittask>
 	</target>
 
