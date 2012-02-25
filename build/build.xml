@@ -191,10 +191,10 @@
 		<if>
 			<os family="windows"/>
 			<then>
-				<!--- The Nginx configuration file (used outside this condition) needs directory separaters switched to slashes --->
+				<!-- The Nginx configuration file (used outside this condition) needs directory separaters switched to slashes -->
 				<propertyregex property="nginx.app.webroot" input="${nginx.app.webroot}" regexp="\\" replace="/" override="true" global="true"/>
 
-				<!--- Copy the Nginx Windows Service files into place --->
+				<!-- Copy the Nginx Windows Service files into place -->
 				<property name="deploy.nginx.conf" value="${nginx.conf}"/>
 				<copy file="${project.src}/config/nginx/service.xml" tofile="${nginx.root}/service/nginx.xml" overwrite="true">
 					<filterset>
@@ -205,7 +205,7 @@
 				<copy file="${project.lib}/winsw.exe" tofile="${nginx.root}/service/nginx.exe"/>
 			</then>
 			<else>
-				<!--- We'll place the Nginx configuration for non-Windows environments in the work path --->
+				<!-- We'll place the Nginx configuration for non-Windows environments in the work path -->
 				<property name="deploy.nginx.conf" value="${project.work}/nginx"/>
 				<mkdir dir="${deploy.nginx.conf}"/>
 			</else>
@@ -221,7 +221,7 @@
 				<filter token="NGINX_LOG_PATH" value="${nginx.log.path}"/>
 				<filter token="NGINX_APP_PORT" value="${nginx.app.port}"/>
 				<filter token="NGINX_APP_SERVER" value="${nginx.app.server}"/>
-				<!--- Different for Windows vs. non-Windows --->
+				<!-- Different for Windows vs. non-Windows -->
 				<filter token="NGINX_APP_WEBROOT" value="${deploy.nginx.app.webroot}"/>
 				<filter token="APP_PROXY_ENABLED" value="${http.appProxy.enabled}"/>
 				<filter token="APP_PROXY_SERVER_HOST_HEADER_NAME" value="${http.appProxy.serverHostHeaderName}"/>
