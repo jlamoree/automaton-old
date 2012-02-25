@@ -204,7 +204,6 @@
 						<filter token="NGINX_EXEC" value="${nginx.exec}"/>
 						<filter token="NGINX_ROOT" value="${nginx.root}"/>
 					</filterset>
-					<globmapper from="service.*" to="nginx.*"/>
 				</copy>
 				<copy file="${project.lib}/winsw.exe" tofile="${nginx.root}/service/nginx.exe"/>
 			</then>
