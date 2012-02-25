@@ -61,7 +61,7 @@
 	<!-- ColdBox -->
 	<property name="coldbox.dist" location="${project.lib}/coldbox-standalone-3.5.0.zip"/>
 	
-	<!-- The webapp properties are used by MX Unit and VarScoper -->
+	<!-- Webapp Properties -->
 	<property name="webapp.server" value="${nginx.hostname}"/>
 	<property name="webapp.port" value="${nginx.port}"/>
 	<property name="webapp.path" location="${cfml.engine.webroot}"/>
@@ -241,22 +241,17 @@
 		<delete dir="${cfml.engine.webroot}/mxunit"/>
 		<unzip src="${mxunit.dist}" dest="${cfml.engine.webroot}/mxunit"/>
 		
-		<copy todir="${cfml.engine.webroot}" overwrite="true">
-			<fileset dir="${project.src}">
+		<copy todir="${cfml.engine.webroot}/test" overwrite="true">
+			<fileset dir="${project.test}">
 				<include name="Application.cfc"/>
 			</fileset>
 			<filterset>
-				<filter token="DSN_NAME" value="${dsn.name}"/>
+				<filter token="DATASOURCE" value="${webapp.datasource}"/>
 			</filterset>
 		</copy>
-		<copy todir="${cfml.engine.webroot}" overwrite="true">
-			<fileset dir="${project.src}">
-				<exclude name="build/"/>
-				<exclude name="config/"/>
-				<exclude name="lib/"/>
-				<exclude name=".*"/>
+		<copy todir="${cfml.engine.webroot}/test" overwrite="true">
+			<fileset dir="${project.test}">
 				<exclude name="Application.cfc"/>
-				<exclude name="settings.xml"/>
 			</fileset>
 		</copy>
 	</target>
