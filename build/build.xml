@@ -41,14 +41,14 @@
 	<property name="cfml.engine.webroot" value="${cfml.engine.root}"/>
 
 	<!-- Nginx -->
-	<property name="nginx.root" value="C:/nginx"/>
-	<property name="nginx.exec" value="${nginx.root}/nginx.exe"/>
-	<property name="nginx.conf" value="${nginx.root}/conf.d"/>
-	<property name="nginx.port" value="80"/>
+	<property name="nginx.root" value="C:\nginx"/>
+	<property name="nginx.exec" value="${nginx.root}\nginx.exe"/>
+	<property name="nginx.conf" value="${nginx.root}\conf"/>
 	<property name="nginx.hostname" value="automaton.com"/>
+	<property name="nginx.port" value="80"/>
 	<property name="nginx.log.path" value="logs"/>
-	<property name="nginx.app.port" value="8500"/>
 	<property name="nginx.app.server" value="127.0.0.1"/>
+	<property name="nginx.app.port" value="8500"/>
 	<property name="nginx.app.webroot" value="${cfml.engine.webroot}"/>
 
 	<!-- Railo -->
@@ -61,9 +61,9 @@
 	<!-- ColdBox -->
 	<property name="coldbox.dist" location="${project.lib}/coldbox-standalone-3.5.0.zip"/>
 	
-	<!-- The webapp properties are used by MX Unit and VarScoper -->
-	<property name="webapp.server" value="${deploy.hostname}"/>
-	<property name="webapp.port" value="${deploy.port}"/>
+	<!-- Webapp Properties -->
+	<property name="webapp.server" value="${nginx.hostname}"/>
+	<property name="webapp.port" value="${nginx.port}"/>
 	<property name="webapp.path" location="${cfml.engine.webroot}"/>
 	<property name="webapp.datasource" location="automaton"/>
 
@@ -127,6 +127,8 @@
 				</not>
 			</condition>
 		</fail>
+		<delete dir="${project.work}"/>
+		<mkdir dir="${project.work}"/>
 	</target>
 
 	<target name="deploy-app" depends="init" description="Deploy application to server.">
@@ -175,11 +177,6 @@
 				<filter token="APP_PROXY_SECURE_ENDPOINT_HEADER_NAME" value="${http.appProxy.secureEndpointHeaderName}"/>
 			</filterset>
 		</copy>
-		
-		
-		<delete dir="${project.work}">
-			<include name="**/*"/>
-		</delete>
 	</target>
 	
 	<target name="deploy-libs" depends="init">
@@ -191,13 +188,22 @@
 		<if>
 			<os family="windows"/>
 			<then>
-				<propertycopy property="deploy.nginx.conf" from="nginx.conf"/>
-				<propertycopy property="deploy.nginx.app.webroot" from="nginx.app.webroot"/>
-				<propertyregex property="deploy.nginx.app.webroot" input="${nginx.app.webroot}" regexp="\\" replace="/" override="true" global="true"/>
+				<!-- The Nginx configuration file (used outside this condition) needs directory separaters switched to slashes -->
+				<propertyregex property="nginx.app.webroot" input="${nginx.app.webroot}" regexp="\\" replace="/" override="true" global="true"/>
+
+				<!-- Copy the Nginx Windows Service files into place -->
+				<property name="deploy.nginx.conf" value="${nginx.conf}"/>
+				<copy file="${project.src}/config/nginx/service.xml" tofile="${nginx.root}/service/nginx.xml" overwrite="true">
+					<filterset>
+						<filter token="NGINX_EXEC" value="${nginx.exec}"/>
+						<filter token="NGINX_ROOT" value="${nginx.root}"/>
+					</filterset>
+				</copy>
+				<copy file="${project.lib}/winsw.exe" tofile="${nginx.root}/service/nginx.exe"/>
 			</then>
 			<else>
-				<propertycopy property="deploy.nginx.app.webroot" from="nginx.app.webroot"/>
-				<property name="deploy.nginx.conf" location="${project.work}/nginx"/>
+				<!-- We'll place the Nginx configuration for non-Windows environments in the work path -->
+				<property name="deploy.nginx.conf" value="${project.work}/nginx"/>
 				<mkdir dir="${deploy.nginx.conf}"/>
 			</else>
 		</if>
@@ -212,7 +218,8 @@
 				<filter token="NGINX_LOG_PATH" value="${nginx.log.path}"/>
 				<filter token="NGINX_APP_PORT" value="${nginx.app.port}"/>
 				<filter token="NGINX_APP_SERVER" value="${nginx.app.server}"/>
-				<filter token="NGINX_APP_WEBROOT" value="${deploy.nginx.app.webroot}"/>
+				<!-- Different for Windows vs. non-Windows -->
+				<filter token="NGINX_APP_WEBROOT" value="${nginx.app.webroot}"/>
 				<filter token="APP_PROXY_ENABLED" value="${http.appProxy.enabled}"/>
 				<filter token="APP_PROXY_SERVER_HOST_HEADER_NAME" value="${http.appProxy.serverHostHeaderName}"/>
 				<filter token="APP_PROXY_SERVER_ADDRESS_HEADER_NAME" value="${http.appProxy.serverAddressHeaderName}"/>
@@ -234,22 +241,17 @@
 		<delete dir="${cfml.engine.webroot}/mxunit"/>
 		<unzip src="${mxunit.dist}" dest="${cfml.engine.webroot}/mxunit"/>
 		
-		<copy todir="${cfml.engine.webroot}" overwrite="true">
-			<fileset dir="${project.src}">
+		<copy todir="${cfml.engine.webroot}/test" overwrite="true">
+			<fileset dir="${project.test}">
 				<include name="Application.cfc"/>
 			</fileset>
 			<filterset>
-				<filter token="DSN_NAME" value="${dsn.name}"/>
+				<filter token="DATASOURCE" value="${webapp.datasource}"/>
 			</filterset>
 		</copy>
-		<copy todir="${cfml.engine.webroot}" overwrite="true">
-			<fileset dir="${project.src}">
-				<exclude name="build/"/>
-				<exclude name="config/"/>
-				<exclude name="lib/"/>
-				<exclude name=".*"/>
+		<copy todir="${cfml.engine.webroot}/test" overwrite="true">
+			<fileset dir="${project.test}">
 				<exclude name="Application.cfc"/>
-				<exclude name="settings.xml"/>
 			</fileset>
 		</copy>
 	</target>
@@ -343,8 +345,8 @@
 	<target name="test-unittests" depends="init">
 		<taskdef name="mxunittask" classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}"/>
 
-		<delete dir="${test.results}"/>
-		<mkdir dir="${test.results}"/>
+		<delete dir="${project.results}"/>
+		<mkdir dir="${project.results}"/>
 		<mxunittask server="${webapp.server}" port="${webapp.port}" outputdir="${mxunit.outputdir}" defaultrunner="${mxunit.runner}">
 			<directory path="${webapp.path}/test/unit" recurse="true" componentPath="test.unit"/>
 		</mxunittask>
