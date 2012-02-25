@@ -353,8 +353,8 @@
 	<target name="test-unittests" depends="init">
 		<taskdef name="mxunittask" classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}"/>
 
-		<delete dir="${test.results}"/>
-		<mkdir dir="${test.results}"/>
+		<delete dir="${project.results}"/>
+		<mkdir dir="${project.results}"/>
 		<mxunittask server="${webapp.server}" port="${webapp.port}" outputdir="${mxunit.outputdir}" defaultrunner="${mxunit.runner}">
 			<directory path="${webapp.path}/test/unit" recurse="true" componentPath="test.unit"/>
 		</mxunittask>
