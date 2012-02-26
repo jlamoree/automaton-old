@@ -7,8 +7,6 @@
 	<cfproperty name="lastName" type="string"/>
 
 	<cffunction name="init" returntype="User" access="public" output="false">
-		<cfset foo = "bar"/>
-		
 		<cfreturn this/>
 	</cffunction>
 
