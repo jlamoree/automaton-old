@@ -371,7 +371,7 @@
 	</target>
 
 	<target name="build-colddoc-html" depends="init" description="Deploy the mini-app and run it to generate HTML documentation in Javadoc style.">
-		<mkdir dir="${cfml.engine.webroot}/doc"
+		<mkdir dir="${cfml.engine.webroot}/doc"/>
 		<copy todir="${cfml.engine.webroot}/doc" overwrite="true">
 			<fileset dir="${project.doc}">
 				<include name="**"/>
