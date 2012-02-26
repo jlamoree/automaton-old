@@ -3,20 +3,17 @@ audio, canvas, video { display: inline-block; *display: inline; *zoom: 1; }
 audio:not([controls]) { display: none; }
 [hidden] { display: none; }
 
-
 html { font-size: 100%; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-
 html, button, input, select, textarea { font-family: sans-serif; color: #222; }
-
 body { margin: 0; font-size: 1em; line-height: 1.4; }
 
-::-moz-selection { background: #fe57a1; color: #fff; text-shadow: none; }
-::selection { background: #fe57a1; color: #fff; text-shadow: none; }
+::-moz-selection { background: #5789FE; color: #fff; text-shadow: none; }
+::selection { background: #5789FE; color: #fff; text-shadow: none; }
 
 a { color: #00e; }
 a:visited { color: #551a8b; }
 a:hover { color: #06e; }
-a:focus { outline: thin dotted; }
+a:focus { outline: none; }
 
 a:hover, a:active { outline: 0; }
 
@@ -77,4 +74,78 @@ input:invalid, textarea:invalid { background-color: #f0dddd; }
 
 .chromeframe { margin: 0.2em 0; background: #ccc; color: black; padding: 0.2em 0; }
 
+body {
+	font-family: "Helvetica Neue", Helvetica, sans-serif;
+	font-size: 15px;
+	color: #333;
+	margin: 20px;
+}
 
+header {
+	font-family: 'IM Fell DW Pica SC', serif;
+	font-size: 50px;
+	color: #734700;
+	position: relative;
+}
+
+section.wrapper {
+	position: relative;
+}
+
+section.login {
+	position: absolute;
+	right: 20px;
+	top: 10px;
+	width: 100px;
+	text-align: right;
+	z-index: 1;
+}
+
+section.login a {
+	color: #999;
+	font-size: 90%;
+}
+
+article {
+	min-height: 400px;
+}
+
+section {
+	width: 600px;
+	margin: 0 auto;
+}
+
+footer {
+	font-size: 13px;
+	border-top: 1px solid #333;
+	padding-top: 5px;
+	color: #999;
+}
+
+#loginForm {
+	margin: 20px auto;
+	width: 400px;
+}
+
+#loginForm p {
+	margin: 10px 0;
+}
+
+#loginForm label {
+	display: inline-block;
+	width: 180px;
+	margin-right: 10px;
+}
+
+#loginForm input[type="text"], #loginForm input[type="password"] {
+	width: 200px;
+}
+
+#loginForm input[type="submit"] {
+	font-size: 12px;
+	line-height: 17px;
+	color: #333;
+	border-radius: 3px;
+	padding: 3px 5px;
+	display: inline-block;
+}

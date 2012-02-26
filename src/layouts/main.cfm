@@ -17,13 +17,23 @@
 	<cfoutput>
 	<title>#pageTitle#</title>
 	<link rel="stylesheet" media="screen" href="/css/style.css?v=#release#"/>
+	<link href="http://fonts.googleapis.com/css?family=IM+Fell+DW+Pica+SC" rel="stylesheet" type="text/css">
 	<script src="/js/app.js?v=#release#"></script>
 	</cfoutput>
 </head>
 <body>
+	<section class="wrapper">
+		<section class="login">
+			<a href="/Auth/index" id="loginLink" class="">Login</a>
+		</section>
+
 	<cfoutput>
-	<header>The Automaton</header>
-	#renderView()#
+	<header>
+		The Automaton
+	</header>
+	<article>
+		#renderView()#
+	</article>
 	<footer>
 		#getSetting("site").title# #getSetting("version")# r#release#
 		<cfif structKeyExists(server, "railo")>
@@ -33,7 +43,14 @@
 		<cfelseif structKeyExists(server, "coldfusion")>
 			on Adobe ColdFusion #replace(server.coldfusion.productversion, ",", ".", "all")#
 		</cfif>
+		<cfif structKeyExists(request, "connection")>
+			at #request.connection.node.name#
+			<cfif request.connection.node.address neq "0.0.0.0">
+				(#request.connection.node.address#:#request.connection.node.port#)
+			</cfif>
+		</cfif>
 	</footer>
 	</cfoutput>
+	</section>
 </body>
 </html>
