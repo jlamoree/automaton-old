@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<project default="init" basedir=".">
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="lib/ant-contrib-1.0b3.jar"/>
+		</classpath>
+	</taskdef>
+
+	<fail message="Please upgrade Ant to version 1.8.2. Running version is ${ant.version}">
+		<condition>
+			<not>
+				<contains string="${ant.version}" substring="1.8.2"/>
+			</not>
+		</condition>
+	</fail>
+
+	<!-- Specify the server.name property via the Ant options -->
+	<property file="${server.name}.properties"/>
+	
+	<!-- The user.name system property is provided by the JVM, which reads the environment variable %USERNAME% or $USER -->
+	<property file="${user.name}.properties"/>
+
+	<property name="project.build" location="."/>
+	<property name="project.test" location="../test"/>
+	<property name="project.src" location="../src"/>
+	<property name="project.doc" location="../doc"/>
+	<property name="project.lib" location="../lib"/>
+	<property name="project.work" location="../work"/>
+	<property name="project.results" location="${project.build}/results"/>
+
+	<!-- Tomcat -->
+	<property name="tomcat.home" location="c:/tomcat"/>
+	<property name="tomcat.vhosts" location="${tomcat.home}/vhosts"/>
+	<property name="tomcat.docbase" value="automaton"/>
+
+	<!-- CFML Engine -->
+	<property name="cfml.engine" value="railo-3.3"/>
+	<property name="cfml.engine.root" location="${tomcat.vhosts}/${tomcat.docbase}"/>
+	<property name="cfml.engine.webinf" location="${cfml.engine.root}/WEB-INF"/>
+	<property name="cfml.engine.webroot" value="${cfml.engine.root}"/>
+
+	<!-- Nginx -->
+	<property name="nginx.root" value="C:\nginx"/>
+	<property name="nginx.exec" value="${nginx.root}\nginx.exe"/>
+	<property name="nginx.conf" value="${nginx.root}\conf"/>
+	<property name="nginx.hostname" value="automaton.com"/>
+	<property name="nginx.port" value="80"/>
+	<property name="nginx.log.path" value="logs"/>
+	<property name="nginx.app.server" value="127.0.0.1"/>
+	<property name="nginx.app.port" value="8500"/>
+	<property name="nginx.app.webroot" value="${cfml.engine.webroot}"/>
+
+	<!-- Railo -->
+	<property name="railo.server.path" location="${cfml.engine.webinf}/lib/railo-server"/>
+	<property name="railo.dist" location="${project.lib}/railo-3.3.1.war"/>
+	
+	<!-- Open BlueDragon -->
+	<property name="openbluedragon.dist" location="${project.lib}/openbluedragon-2.0.2.war"/>
+
+	<!-- ColdBox -->
+	<property name="coldbox.dist" location="${project.lib}/coldbox-standalone-3.5.0.zip"/>
+	
+	<!-- Webapp Properties -->
+	<property name="webapp.server" value="${nginx.hostname}"/>
+	<property name="webapp.port" value="${nginx.port}"/>
+	<property name="webapp.path" location="${cfml.engine.webroot}"/>
+	<property name="webapp.datasource" location="automaton"/>
+
+	<!-- MX Unit -->
+	<property name="mxunit.jar" location="${project.build}/lib/mxunit-ant.jar"/>
+	<property name="mxunit.dist" location="${project.lib}/mxunit-framework-2.1.0.zip"/>
+	<property name="mxunit.outputdir" location="${project.results}"/>
+	<property name="mxunit.timeout" value="300"/>
+	<property name="mxunit.runner" value="/test/resources/HttpAntRunner.cfc?requestTimeout=${mxunit.timeout}"/>
+
+	<!-- VarScoper -->
+	<property name="varscoper.dist" location="${project.lib}/varscoper4.zip"/>
+	<property name="varscoper.url" value="http://${webapp.server}:${webapp.port}/test/varscoper/varScoper.cfm"/>
+	<property name="varscoper.path" value="${webapp.path}/model"/>
+	<property name="varscoper.recurse" value="true"/>
+	<property name="varscoper.outputfile" location="${project.results}/varscoper.csv"/>
+
+	<!-- ColdDoc -->
+	<property name="colddoc.dist" location="${project.lib}/colddoc_v1.0.zip"/>
+	<property name="colddoc.output" value="${java.io.tmpdir}/colddoc.html"/>
+
+	<!-- Deploy information -->
+	<tstamp>
+		<format property="deploy.release" pattern="yyyyMMdd"/>
+	</tstamp>
+	<property name="deploy.hostname" value="automaton"/>
+	<property name="deploy.port" value="80"/>
+	<if>
+		<equals arg1="${deploy.port}" arg2="80"/>
+		<then>
+			<property name="deploy.baseurl" value="http://${deploy.hostname}/"/>
+		</then>
+		<else>
+			<property name="deploy.baseurl" value="http://${deploy.hostname}:${deploy.port}/"/>
+		</else>
+	</if>
+
+	<!-- HTTP Headers -->
+	<property name="http.appProxy.enabled" value="true"/>
+	<property name="http.appProxy.serverHostHeaderName" value="X-Forwarded-Server-Host"/>
+	<property name="http.appProxy.serverAddressHeaderName" value="X-Forwarded-Server-IP"/>
+	<property name="http.appProxy.serverPortHeaderName" value="X-Forwarded-Server-Port"/>
+	<property name="http.appProxy.clientAddressHeaderName" value="X-Forwarded-Client-IP"/>
+	<property name="http.appProxy.secureEndpointHeaderName" value="X-Forwarded-Secure-Endpoint"/>	
+
+
+	<target name="init" description="Initialize build and perform sanity check.">
+		<echo message="Starting Ant from ${basedir} by user ${user.name}"/>
+
+		<fail message="The CFML engine root (${cfml.engine.root}) does not exist.">
+			<condition>
+				<not>
+					<available file="${cfml.engine.root}" type="dir"/>
+				</not>
+			</condition>
+		</fail>
+		<fail message="The CFML engine webroot (${cfml.engine.webroot}) does not exist.">
+			<condition>
+				<not>
+					<available file="${cfml.engine.webroot}" type="dir"/>
+				</not>
+			</condition>
+		</fail>
+		<delete dir="${project.work}"/>
+		<mkdir dir="${project.work}"/>
+	</target>
+
+	<target name="deploy-app" depends="init" description="Deploy application to server.">
+		<echo message="Deploying the application to ${cfml.engine.webroot}"/>
+		
+		<copy todir="${cfml.engine.webroot}/config" overwrite="true">
+			<fileset dir="${project.src}/config">
+				<include name="*.cfc"/>
+				<include name="*.cfm"/>
+			</fileset>
+			<filterset>
+				<filter token="RELEASE" value="${deploy.release}"/>
+				<filter token="DEPLOY_BASEURL" value="${deploy.baseurl}"/>
+				<filter token="DATASOURCE" value="${webapp.datasource}"/>
+			</filterset>
+		</copy>
+		<copy todir="${cfml.engine.webroot}" overwrite="true">
+			<fileset dir="${project.src}">
+				<include name="Application.cfc"/>
+			</fileset>
+			<filterset>
+				<filter token="DATASOURCE" value="${webapp.datasource}"/>
+			</filterset>
+		</copy>
+		<copy todir="${cfml.engine.webroot}" overwrite="true">
+			<fileset dir="${project.src}">
+				<exclude name="build/"/>
+				<exclude name="config/"/>
+				<exclude name="lib/"/>
+				<exclude name=".*"/>
+				<exclude name="Application.cfc"/>
+				<exclude name="ConnectionInspector.cfc"/>
+				<exclude name="settings.xml"/>
+			</fileset>
+		</copy>
+		<copy todir="${cfml.engine.webroot}" overwrite="true">
+			<fileset dir="${project.src}">
+				<include name="ConnectionInspector.cfc"/>
+			</fileset>
+			<filterset>
+				<filter token="APP_PROXY_ENABLED" value="${http.appProxy.enabled}"/>
+				<filter token="APP_PROXY_SERVER_HOST_HEADER_NAME" value="${http.appProxy.serverHostHeaderName}"/>
+				<filter token="APP_PROXY_SERVER_ADDRESS_HEADER_NAME" value="${http.appProxy.serverAddressHeaderName}"/>
+				<filter token="APP_PROXY_SERVER_PORT_HEADER_NAME" value="${http.appProxy.serverPortHeaderName}"/>
+				<filter token="APP_PROXY_CLIENT_ADDRESS_HEADER_NAME" value="${http.appProxy.clientAddressHeaderName}"/>
+				<filter token="APP_PROXY_SECURE_ENDPOINT_HEADER_NAME" value="${http.appProxy.secureEndpointHeaderName}"/>
+			</filterset>
+		</copy>
+	</target>
+	
+	<target name="deploy-libs" depends="init">
+		<delete dir="${cfml.engine.webroot}/coldbox"/>
+		<unzip src="${coldbox.dist}" dest="${cfml.engine.webroot}/coldbox"/>
+	</target>
+
+	<target name="deploy-nginx">
+		<if>
+			<os family="windows"/>
+			<then>
+				<!-- The Nginx configuration file (used outside this condition) needs directory separaters switched to slashes -->
+				<propertyregex property="nginx.app.webroot" input="${nginx.app.webroot}" regexp="\\" replace="/" override="true" global="true"/>
+
+				<!-- Copy the Nginx Windows Service files into place -->
+				<property name="deploy.nginx.conf" value="${nginx.conf}"/>
+				<copy file="${project.src}/config/nginx/service.xml" tofile="${nginx.root}/service/nginx.xml" overwrite="true">
+					<filterset>
+						<filter token="NGINX_EXEC" value="${nginx.exec}"/>
+						<filter token="NGINX_ROOT" value="${nginx.root}"/>
+					</filterset>
+				</copy>
+				<copy file="${project.lib}/winsw.exe" tofile="${nginx.root}/service/nginx.exe"/>
+			</then>
+			<else>
+				<!-- We'll place the Nginx configuration for non-Windows environments in the work path -->
+				<property name="deploy.nginx.conf" value="${project.work}/nginx"/>
+				<mkdir dir="${deploy.nginx.conf}"/>
+			</else>
+		</if>
+		
+		<copy todir="${deploy.nginx.conf}" overwrite="true">
+			<fileset dir="${project.src}/config/nginx">
+				<include name="automaton.conf"/>
+			</fileset>
+			<filterset>
+				<filter token="NGINX_PORT" value="${nginx.port}"/>
+				<filter token="NGINX_HOSTNAME" value="${nginx.hostname}"/>
+				<filter token="NGINX_LOG_PATH" value="${nginx.log.path}"/>
+				<filter token="NGINX_APP_PORT" value="${nginx.app.port}"/>
+				<filter token="NGINX_APP_SERVER" value="${nginx.app.server}"/>
+				<!-- Different for Windows vs. non-Windows -->
+				<filter token="NGINX_APP_WEBROOT" value="${nginx.app.webroot}"/>
+				<filter token="APP_PROXY_ENABLED" value="${http.appProxy.enabled}"/>
+				<filter token="APP_PROXY_SERVER_HOST_HEADER_NAME" value="${http.appProxy.serverHostHeaderName}"/>
+				<filter token="APP_PROXY_SERVER_ADDRESS_HEADER_NAME" value="${http.appProxy.serverAddressHeaderName}"/>
+				<filter token="APP_PROXY_SERVER_PORT_HEADER_NAME" value="${http.appProxy.serverPortHeaderName}"/>
+				<filter token="APP_PROXY_CLIENT_ADDRESS_HEADER_NAME" value="${http.appProxy.clientAddressHeaderName}"/>
+				<filter token="APP_PROXY_SECURE_ENDPOINT_HEADER_NAME" value="${http.appProxy.secureEndpointHeaderName}"/>
+			</filterset>
+		</copy>
+		
+		<if>
+			<os family="mac"/>
+			<then>
+				<echo message="Nginx configuration file created in ${deploy.nginx.conf}."/>
+			</then>
+		</if>		
+	</target>
+
+	<target name="deploy-unittests" depends="init">
+		<delete dir="${cfml.engine.webroot}/mxunit"/>
+		<unzip src="${mxunit.dist}" dest="${cfml.engine.webroot}/mxunit"/>
+		
+		<copy todir="${cfml.engine.webroot}/test" overwrite="true">
+			<fileset dir="${project.test}">
+				<include name="Application.cfc"/>
+			</fileset>
+			<filterset>
+				<filter token="DATASOURCE" value="${webapp.datasource}"/>
+			</filterset>
+		</copy>
+		<copy todir="${cfml.engine.webroot}/test" overwrite="true">
+			<fileset dir="${project.test}">
+				<exclude name="Application.cfc"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="deploy-varscoper" depends="init">
+		<delete dir="${cfml.engine.webroot}/test/varscoper"/>
+		<mkdir dir="${cfml.engine.webroot}/test/varscoper"/>
+		<touch file="${cfml.engine.webroot}/test/varscoper/Application.cfc"/>
+		<unzip src="${project.lib}/varscoper4.zip" dest="${cfml.engine.webroot}/test/varscoper">
+			<patternset>
+				<include name="display*.cfm"/>
+				<include name="fileDisplay.cfm"/>
+				<include name="index.cfm"/>
+				<include name="license.txt"/>
+				<include name="varScoper*.cf?"/>
+			</patternset>
+		</unzip>
+	</target>
+
+	<target name="deploy-colddoc" depends="init">
+		<delete dir="${cfml.engine.webroot}/colddoc"/>
+		<unzip src="${project.lib}/colddoc_v1.0.zip" dest="${cfml.engine.webroot}/colddoc">
+			<patternset>
+				<include name="colddoc/license.txt"/>
+				<include name="colddoc/ColdDoc.cfc"/>
+				<include name="colddoc/strategy/**"/>
+			</patternset>
+			<regexpmapper from="^colddoc/(.+)$$" to="\1"/>
+		</unzip>
+	</target>
+	
+	<target name="deploy-railo" depends="init">
+		<delete dir="${tomcat.vhosts}/${tomcat.docbase}">
+			<patternset>
+				<include name="WEB-INF/**"/>
+				<exclude name="WEB-INF/railo/railo-web.xml.cfm"/>
+				<exclude name="WEB-INF/lib/railo-server/context/railo-server.xml"/>
+			</patternset>
+		</delete>
+		<unwar src="${railo.dist}" dest="${tomcat.vhosts}/${tomcat.docbase}">
+			<patternset>
+				<include name="WEB-INF/**"/>
+			</patternset>
+		</unwar>
+		<copy todir="${cfml.engine.webinf}" overwrite="true">
+			<fileset dir="${project.src}/config/railo">
+				<include name="*.xml"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="update-railo" depends="init">
+		<copy todir="${railo.server.path}/patches" overwrite="true">
+			<fileset dir="${project.lib}">
+				<include name="*.rc"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="deploy-openbluedragon" depends="init">
+		<delete dir="${tomcat.vhosts}/${tomcat.docbase}">
+			<patternset>
+				<include name="WEB-INF/**"/>
+				<!--
+				<exclude name="WEB-INF/railo/railo-web.xml.cfm"/>
+				-->
+			</patternset>
+		</delete>
+		<unwar src="${openbluedragon.dist}" dest="${tomcat.vhosts}/${tomcat.docbase}">
+			<patternset>
+				<include name="WEB-INF/**"/>
+			</patternset>
+		</unwar>
+		<copy todir="${cfml.engine.webinf}" overwrite="true">
+			<fileset dir="${project.src}/config/openbluedragon">
+				<include name="*.xml"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="undeploy" depends="init" description="Remove a deployed copy of the application and libraries.">
+		<echo message="Undeploying from ${cfml.engine.webroot}"/>
+		<delete includeemptydirs="true">
+			<fileset dir="${cfml.engine.webroot}">
+				<include name="**/*"/>
+				<exclude name="WEB-INF/"/>
+			</fileset>
+		</delete>
+	</target>
+	
+	<target name="test-unittests" depends="init">
+		<taskdef name="mxunittask" classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}"/>
+
+		<delete dir="${project.results}"/>
+		<mkdir dir="${project.results}"/>
+		<mxunittask server="${webapp.server}" port="${webapp.port}" outputdir="${mxunit.outputdir}" defaultrunner="${mxunit.runner}">
+			<directory path="${webapp.path}/test/unit" recurse="true" componentPath="test.unit"/>
+		</mxunittask>
+	</target>
+
+	<target name="test-varscoper" depends="init">
+		<get src="${varscoper.url}?displayformat=csv&amp;filePath=${varscoper.path}&amp;recursiveDirectory=${varscoper.recurse}" dest="${varscoper.outputfile}" verbose="false"/>
+
+		<loadfile srcfile="${varscoper.outputfile}" property="varscoper.csv">
+			<filterchain>
+				<headfilter skip="1"/>
+				<trim/>
+			</filterchain>
+		</loadfile>
+
+		<fail message="CFML var scope violation is found.">
+			<condition>
+				<isset property="varscoper.csv"/>
+			</condition>
+		</fail>
+	</target>
+
+	<target name="build-colddoc-html" depends="init" description="Deploy the mini-app and run it to generate HTML documentation in Javadoc style.">
+		<mkdir dir="${cfml.engine.webroot}/doc"/>
+		<copy todir="${cfml.engine.webroot}/doc" overwrite="true">
+			<fileset dir="${project.doc}">
+				<include name="**"/>
+			</fileset>
+		</copy>
+		
+		<get src="http://${webapp.server}:${webapp.port}/doc/generate.cfm" dest="${colddoc.output}" verbose="false"/>
+	</target>
+
+</project>
