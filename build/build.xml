@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<project default="init" basedir=".">
+<project default="init" name="Automaton" basedir=".">
 
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
 		<classpath>
