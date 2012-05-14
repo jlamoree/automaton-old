@@ -1,0 +1,9 @@
+<service>
+	<id>nginx</id>
+	<name>Nginx</name>
+	<description>Nginx High-Performance Web Server</description>
+	<executable>"@NGINX_EXEC@"</executable>
+	<logmode>rotate</logmode>
+	<startargument>-p "@NGINX_ROOT@"</startargument>
+	<stopargument>-p "@NGINX_ROOT@" -s stop</stopargument>
+</service>
