@@ -21,10 +21,6 @@
 				singletonReload = false
 			};
 
-			variables.datasources = {
-				dsn = {name="@DATASOURCE@"}
-			};
-
 			variables.settings = {
 				version = "1.0",
 				release = "@RELEASE@",

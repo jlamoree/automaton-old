@@ -3,3 +3,4 @@ temp
 work
 build/results
 .DS_Store
+.tm_properties
