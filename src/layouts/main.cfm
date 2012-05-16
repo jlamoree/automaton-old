@@ -25,7 +25,7 @@
 </head>
 <body>
 	<section class="wrapper">
-		<section class="account">
+		<section id="account">
 			<cfif isObject(user)>
 				<cfoutput>
 					Hello, #user.getFirstName()# #user.getLastName()#. <a href="/Auth/logout" id="logoutLink" class="">Logout</a>
