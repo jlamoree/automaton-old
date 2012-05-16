@@ -17,7 +17,7 @@
 		
 		<cfif arguments.userId>
 			<cfquery name="query">
-				SELECT userId, username, firstName, lastName, passwordSalt, passwordHash, email, createDate, modifyDate
+				SELECT userId, username, firstName, lastName, passwordSalt, passwordHash, email, isActive, createDate, modifyDate
 				FROM users
 				WHERE userId = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#arguments.userId#"/>
 			</cfquery>
@@ -26,7 +26,7 @@
 			</cfif>
 		<cfelse>
 			<cfquery name="query">
-				SELECT userId, username, firstName, lastName, passwordSalt, passwordHash, email, createDate, modifyDate
+				SELECT userId, username, firstName, lastName, passwordSalt, passwordHash, email, isActive, createDate, modifyDate
 				FROM users
 				WHERE username = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#arguments.username#"/>
 			</cfquery>
@@ -43,6 +43,11 @@
 		<cfset user.setPasswordSalt(query.passwordSalt)/>
 		<cfset user.setPasswordHash(query.passwordHash)/>
 		<cfset user.setEmail(query.email)/>
+		<cfif val(query.isActive)>
+			<cfset user.setIsActive(true)/>
+		<cfelse>
+			<cfset user.setIsActive(false)/>
+		</cfif>
 		<cfset user.setCreateDate(query.createDate)/>
 		<cfset user.setModifyDate(query.modifyDate)/>
 		<cfreturn user/>
@@ -61,7 +66,8 @@
 					lastName,
 					passwordSalt,
 					passwordHash,
-					email
+					email,
+					isActive
 				) VALUES (
 				<cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#_user.getUsername()#"/>,
 				<cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#_user.getFirstName()#"/>,
@@ -69,6 +75,7 @@
 				<cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#_user.getPasswordSalt()#"/>,
 				<cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#_user.getPasswordHash()#"/>,
 				<cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#_user.getEmail()#"/>
+				<cfqueryparam cfsqltype="CF_SQL_BIT" value="#iif(_user.getIsActive(), de('1'), de('0'))#"/>
 				)
 			</cfquery>
 		<cfelse>
@@ -79,7 +86,8 @@
 					lastName = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#_user.getLastName()#"/>,
 					passwordSalt = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#_user.getPasswordSalt()#"/>,
 					passwordHash = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#_user.getPasswordHash()#"/>,
-					email = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#_user.getEmail()#"/>
+					email = <cfqueryparam cfsqltype="CF_SQL_VARCHAR" value="#_user.getEmail()#"/>,
+					isActive = <cfqueryparam cfsqltype="CF_SQL_BIT" value="#iif(_user.getIsActive(), de('1'), de('0'))#"/>
 				WHERE userId = <cfqueryparam cfsqltype="CF_SQL_INTEGER" value="#_user.getUserId()#"/>
 			</cfquery>
 		</cfif>

@@ -8,10 +8,7 @@
 	<cfset release = getSetting("release")/>
 	<cfset version = getSetting("version")/>
 	
-	<cfset user = ""/>
-	<cfif structKeyExists(session, "user")>
-		<cfset user = session.user/>
-	</cfif>
+	<cfset user = event.getValue("user", "", true)/>
 </cfsilent>
 <html>
 <head>
@@ -30,7 +27,9 @@
 	<section class="wrapper">
 		<section class="account">
 			<cfif isObject(user)>
-				<cfoutput>Hello, #user.getFirstName()# #user.getLastName()#</cfoutput>
+				<cfoutput>
+					Hello, #user.getFirstName()# #user.getLastName()#. <a href="/Auth/logout" id="logoutLink" class="">Logout</a>
+				</cfoutput>
 			<cfelse>
 				<cfif not event.getCurrentHandler() eq "Auth">
 					<a href="/Auth/index" id="loginLink" class="">Login</a>
