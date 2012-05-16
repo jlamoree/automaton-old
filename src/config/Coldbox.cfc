@@ -13,7 +13,8 @@
 
 			variables.interceptors = [
 				{class="coldbox.system.interceptors.Autowire", properties={}},
-				{class="coldbox.system.interceptors.SES"}
+				{class="coldbox.system.interceptors.SES"},
+				{class="interceptors.AuthSession"}
 			];
 
 			variables.wirebox = {
@@ -27,6 +28,14 @@
 				site = {
 					title = "The Automaton"
 				}
+			};
+
+			variables.flash = {
+				scope = "session",
+				properties = {},
+				inflateToRC = true,
+				autoPurge = true,
+				autoSave = true
 			};
 
 			variables.logbox = {

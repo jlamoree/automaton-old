@@ -1,13 +1,20 @@
 <cfsilent>
 	
+	<cfset user = ""/>
+	<cfif structKeyExists(session, "user")>
+		<cfset user = session.user/>
+	</cfif>
 	
+	<cfset result = event.getValue("result", "")/>
+
 </cfsilent>
-<cfif event.valueExists("username")>
-	<p>
-	You are now logged in.
-	</p>
-<cfelse>
-	<form id="loginForm" action="/Auth/index" method="POST">
+<cfoutput>
+	<cfif isStruct(result) and result.status eq "failure">
+		<p class="error">#result.message#</p>
+	<cfelse>
+		<p>Please enter your username and password.</p>
+	</cfif>
+	<form id="loginForm" action="/Auth/processLogin" method="POST">
 		<p>
 			<label>Username:</label>
 			<input type="text" id="username" name="username"/>
@@ -17,7 +24,7 @@
 			<input type="password" id="password" name="password"/>
 		</p>
 		<p>
-			<input type="submit" value="Login"/>
+			<input type="submit" id="loginButton" value="Login"/>
 		</p>
 	</form>
-</cfif>
+</cfoutput>
