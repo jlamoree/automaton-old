@@ -7,7 +7,12 @@
 	</cfif>	
 	<cfset release = getSetting("release")/>
 	<cfset version = getSetting("version")/>
-</cfsilent><cfcontent reset="true"/><!doctype html>
+	
+	<cfset user = ""/>
+	<cfif structKeyExists(session, "user")>
+		<cfset user = session.user/>
+	</cfif>
+</cfsilent>
 <html>
 <head>
 	<meta charset="utf-8"/>
@@ -23,8 +28,14 @@
 </head>
 <body>
 	<section class="wrapper">
-		<section class="login">
-			<a href="/Auth/index" id="loginLink" class="">Login</a>
+		<section class="account">
+			<cfif isObject(user)>
+				<cfoutput>Hello, #user.getFirstName()# #user.getLastName()#</cfoutput>
+			<cfelse>
+				<cfif not event.getCurrentHandler() eq "Auth">
+					<a href="/Auth/index" id="loginLink" class="">Login</a>
+				</cfif>
+			</cfif>
 		</section>
 
 	<cfoutput>

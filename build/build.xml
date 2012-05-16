@@ -66,7 +66,7 @@
 	<property name="webapp.server" value="${nginx.hostname}"/>
 	<property name="webapp.port" value="${nginx.port}"/>
 	<property name="webapp.path" location="${cfml.engine.webroot}"/>
-	<property name="webapp.datasource" location="automaton"/>
+	<property name="webapp.datasource" value="automaton"/>
 
 	<!-- MX Unit -->
 	<property name="mxunit.jar" location="${project.build}/lib/mxunit-ant.jar"/>
@@ -111,7 +111,7 @@
 	<property name="http.appProxy.secureEndpointHeaderName" value="X-Forwarded-Secure-Endpoint"/>	
 
 
-	<target name="init" description="Initialize build and perform sanity check.">
+	<target name="init" description="Initialize working directory and perform sanity check.">
 		<echo message="Starting Ant from ${basedir} by user ${user.name}"/>
 
 		<fail message="The CFML engine root (${cfml.engine.root}) does not exist.">
@@ -132,7 +132,7 @@
 		<mkdir dir="${project.work}"/>
 	</target>
 
-	<target name="deploy-app" depends="init" description="Deploy application to server.">
+	<target name="deploy-app" depends="init" description="Deploy CFML application to server.">
 		<echo message="Deploying the application to ${cfml.engine.webroot}"/>
 		
 		<copy todir="${cfml.engine.webroot}/config" overwrite="true">
@@ -143,7 +143,6 @@
 			<filterset>
 				<filter token="RELEASE" value="${deploy.release}"/>
 				<filter token="DEPLOY_BASEURL" value="${deploy.baseurl}"/>
-				<filter token="DATASOURCE" value="${webapp.datasource}"/>
 			</filterset>
 		</copy>
 		<copy todir="${cfml.engine.webroot}" overwrite="true">
@@ -180,7 +179,7 @@
 		</copy>
 	</target>
 	
-	<target name="deploy-libs" depends="init">
+	<target name="deploy-libs" depends="init" description="Deploy all the libraries needed by the CFML application.">
 		<delete dir="${cfml.engine.webroot}/coldbox"/>
 		<unzip src="${coldbox.dist}" dest="${cfml.engine.webroot}/coldbox"/>
 	</target>
@@ -238,7 +237,7 @@
 		</if>		
 	</target>
 
-	<target name="deploy-unittests" depends="init">
+	<target name="deploy-unittests" depends="init" description="Deploy the MX Unit framework and all of the test cases.">
 		<delete dir="${cfml.engine.webroot}/mxunit"/>
 		<unzip src="${mxunit.dist}" dest="${cfml.engine.webroot}/mxunit"/>
 		
@@ -257,7 +256,7 @@
 		</copy>
 	</target>
 
-	<target name="deploy-varscoper" depends="init">
+	<target name="deploy-varscoper" depends="init" description="Deploy the files needed to run a varscoper test.">
 		<delete dir="${cfml.engine.webroot}/test/varscoper"/>
 		<mkdir dir="${cfml.engine.webroot}/test/varscoper"/>
 		<touch file="${cfml.engine.webroot}/test/varscoper/Application.cfc"/>
@@ -272,7 +271,7 @@
 		</unzip>
 	</target>
 
-	<target name="deploy-colddoc" depends="init">
+	<target name="deploy-colddoc" depends="init" description="Deploy the ColdDoc tool.">
 		<delete dir="${cfml.engine.webroot}/colddoc"/>
 		<unzip src="${project.lib}/colddoc_v1.0.zip" dest="${cfml.engine.webroot}/colddoc">
 			<patternset>
@@ -339,11 +338,12 @@
 			<fileset dir="${cfml.engine.webroot}">
 				<include name="**/*"/>
 				<exclude name="WEB-INF/"/>
+				<exclude name="CFIDE/"/>
 			</fileset>
 		</delete>
 	</target>
 	
-	<target name="test-unittests" depends="init">
+	<target name="test-unittests" depends="init" description="Run all of the MX Unit test files.">
 		<taskdef name="mxunittask" classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}"/>
 
 		<delete dir="${project.results}"/>
@@ -353,7 +353,7 @@
 		</mxunittask>
 	</target>
 
-	<target name="test-varscoper" depends="init">
+	<target name="test-varscoper" depends="init" description="Run a varscoper test.">
 		<get src="${varscoper.url}?displayformat=csv&amp;filePath=${varscoper.path}&amp;recursiveDirectory=${varscoper.recurse}" dest="${varscoper.outputfile}" verbose="false"/>
 
 		<loadfile srcfile="${varscoper.outputfile}" property="varscoper.csv">
