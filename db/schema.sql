@@ -1,0 +1,17 @@
+CREATE TABLE users (
+  userId SERIAL PRIMARY KEY,
+  username VARCHAR(100) NOT NULL,
+  passwordSalt VARCHAR(200),
+  passwordHash VARCHAR(200),
+  firstName VARCHAR(100),
+  lastName VARCHAR(100),
+  email VARCHAR(255),
+  isActive BOOLEAN NOT NULL DEFAULT TRUE,
+  createDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  modifyDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+CREATE UNIQUE INDEX user_username ON users (username);
+CREATE TRIGGER last_mod_trigger BEFORE UPDATE ON users
+  FOR EACH ROW EXECUTE PROCEDURE set_last_modified();
+
+
