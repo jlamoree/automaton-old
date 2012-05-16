@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project basedir=".">
+
+	<property file="${user.name}.properties"/>
+	<property file="${server.name}.properties"/>
+
+	<property file="data.properties"/>
+
+	<property name="project.build" location="."/>
+	<property name="project.lib" location="./lib"/>
+
+	<property name="dbunit.data" location="../data"/>
+	<property name="dbunit.export" location="../export"/>
+	<property name="dbunit.format" value="xml"/>
+
+	<property name="jdbc.server" value="lili"/>
+	<property name="jdbc.port" value="5432"/>
+	<property name="jdbc.database" value="automaton"/>
+	<property name="jdbc.username" value=""/>
+	<property name="jdbc.password" value=""/>
+	<property name="jdbc.driver" value="org.postgresql.Driver"/>
+	<property name="jdbc.url" value="jdbc:postgresql://${jdbc.server}:${jdbc.port}/${jdbc.database}"/>
+
+	<target name="dbunit">
+		<taskdef name="dbunit" classname="org.dbunit.ant.DbUnitTask">
+			<classpath>
+				<pathelement path="${project.lib}"/>
+				<fileset dir="${project.lib}">
+					<include name="dbunit-2.4.8.jar"/>
+					<include name="slf4j-*.jar"/>
+					<include name="postgresql*.jar"/>
+				</fileset>
+			</classpath>
+		</taskdef>
+	</target>
+
+	<target name="database-compare" depends="dbunit" description="Run a DBUnit compare against configured database.">
+		<dbunit driver="${jdbc.driver}" url="${jdbc.url}" userid="${jdbc.username}" password="${jdbc.password}">
+			<dbconfig>
+				<property name="datatypeFactory" value="org.dbunit.ext.postgresql.PostgresqlDataTypeFactory"/>
+			</dbconfig>
+			<compare src="${dbunit.data}/users.xml" format="${dbunit.format}">
+				<query name="users" sql="${data.query.users}"/>
+			</compare>
+		</dbunit>
+	</target>
+
+	<target name="database-export" depends="dbunit" description="Run a DBUnit export from configured database.">
+		<mkdir dir="${dbunit.export}"/>
+		<dbunit driver="${jdbc.driver}" url="${jdbc.url}" userid="${jdbc.username}" password="${jdbc.password}">
+			<dbconfig>
+				<property name="datatypeFactory" value="org.dbunit.ext.postgresql.PostgresqlDataTypeFactory"/>
+			</dbconfig>
+			<export dest="${dbunit.export}/users.xml" format="${dbunit.format}">
+				<query name="users" sql="${data.query.users}"/>
+			</export>
+		</dbunit>
+	</target>
+
+	<target name="database-update" depends="dbunit" description="Run a DBUnit refresh of the configured database.">
+		<dbunit driver="${jdbc.driver}" url="${jdbc.url}" userid="${jdbc.username}" password="${jdbc.password}">
+			<dbconfig>
+				<feature name="qualifiedTableNames" value="true"/>
+				<feature name="caseSensitiveTableNames" value="true"/>
+				<feature name="datatypeWarning" value="true"/>
+				<property name="datatypeFactory" value="org.dbunit.ext.postgresql.PostgresqlDataTypeFactory"/>
+			</dbconfig>
+
+			<operation type="REFRESH" src="${dbunit.data}/users.xml" format="${dbunit.format}"/>
+		</dbunit>
+	</target>
+
+</project>

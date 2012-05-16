@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dataset>
+  <table name="users">
+    <column>userid</column>
+    <column>firstname</column>
+    <column>lastname</column>
+    <column>passwordsalt</column>
+    <column>passwordhash</column>
+    <column>email</column>
+    <column>isactive</column>
+    <row>
+      <value>2</value>
+      <value>Unit</value>
+      <value>Test</value>
+      <value>C6732747-D888-47C0-8B00-6AE66EF3A78C</value>
+      <value>a78085cffadb82727fde5816051d7073da7606d1</value>
+      <value>test@autocfml.com</value>
+      <value>true</value>
+    </row>
+  </table>
+</dataset>
