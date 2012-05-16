@@ -7,6 +7,7 @@
 	<cfproperty name="firstName" type="string"/>
 	<cfproperty name="lastName" type="string"/>
 	<cfproperty name="email" type="string"/>
+	<cfproperty name="isActive" type="boolean"/>
 	<cfproperty name="createDate" type="date"/>
 	<cfproperty name="modifyDate" type="date"/>
 
