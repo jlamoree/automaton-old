@@ -11,6 +11,9 @@
 		<cfset var user = "null"/>
 		<cfset var query = "null"/>
 		
+		<!--- This is a deliberate var scope error to validate test --->
+		<cfset bad = "important data"/>
+		
 		<cfif not arguments.userId and not len(arguments.username)>
 			<cfthrow type="InvalidArgumentException" message="The userId or username must be provided."/>
 		</cfif>
