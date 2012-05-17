@@ -11,6 +11,9 @@
 		<cfset var user = "null"/>
 		<cfset var query = "null"/>
 		
+		<cfset bad = "trigger a varscope error">
+		
+		
 		<cfif not arguments.userId and not len(arguments.username)>
 			<cfthrow type="InvalidArgumentException" message="The userId or username must be provided."/>
 		</cfif>
