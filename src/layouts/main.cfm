@@ -25,7 +25,7 @@
 </head>
 <body>
 	<section class="wrapper">
-		<section class="account">
+		<section id="account">
 			<cfif isObject(user)>
 				<cfoutput>
 					Hello, #user.getFirstName()# #user.getLastName()#. <a href="/Auth/logout" id="logoutLink" class="">Logout</a>
@@ -37,30 +37,30 @@
 			</cfif>
 		</section>
 
-	<cfoutput>
-	<header>
-		The Automaton
-	</header>
-	<article>
-		#renderView()#
-	</article>
-	<footer>
-		#getSetting("site").title# #getSetting("version")# r#release#
-		<cfif structKeyExists(server, "railo")>
-			on Railo #server.railo.version#
-		<cfelseif structKeyExists(server, "bluedragon")>
-			on Open BlueDragon #replace(server.bluedragon.productversion, ",", ".", "all")#
-		<cfelseif structKeyExists(server, "coldfusion")>
-			on Adobe ColdFusion #replace(server.coldfusion.productversion, ",", ".", "all")#
-		</cfif>
-		<cfif structKeyExists(request, "connection")>
-			at #request.connection.node.name#
-			<cfif request.connection.node.address neq "0.0.0.0">
-				(#request.connection.node.address#:#request.connection.node.port#)
+		<cfoutput>
+		<header>
+			The Automaton
+		</header>
+		<article>
+			#renderView()#
+		</article>
+		<footer>
+			#getSetting("site").title# #getSetting("version")# r#release#
+			<cfif structKeyExists(server, "railo")>
+				on Railo #server.railo.version#
+			<cfelseif structKeyExists(server, "bluedragon")>
+				on Open BlueDragon #replace(server.bluedragon.productversion, ",", ".", "all")#
+			<cfelseif structKeyExists(server, "coldfusion")>
+				on Adobe ColdFusion #replace(server.coldfusion.productversion, ",", ".", "all")#
 			</cfif>
-		</cfif>
-	</footer>
-	</cfoutput>
+			<cfif structKeyExists(request, "connection")>
+				at #request.connection.node.name#
+				<cfif request.connection.node.address neq "0.0.0.0">
+					(#request.connection.node.address#:#request.connection.node.port#)
+				</cfif>
+			</cfif>
+		</footer>
+		</cfoutput>
 	</section>
 </body>
 </html>
