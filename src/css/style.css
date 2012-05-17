@@ -92,7 +92,7 @@ section.wrapper {
 	position: relative;
 }
 
-section.account {
+#account {
 	position: absolute;
 	right: 20px;
 	top: 10px;
@@ -102,7 +102,7 @@ section.account {
 	z-index: 1;
 }
 
-section.account a {
+#account a {
 	color: #999;
 }
 
