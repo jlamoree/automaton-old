@@ -2,6 +2,7 @@
 
 	<cfproperty name="userService" inject="userService"/>
 	<cfproperty name="sessionStorage" inject="coldbox:plugin:sessionStorage"/>
+	<cfproperty name="log" inject="logbox:logger:{this}"/>
 
 	<cffunction name="index" returntype="void" access="public" output="false">
 		<cfargument name="event" type="coldbox.system.web.context.RequestContext" required="true"/>
@@ -19,6 +20,7 @@
 		<cfset var result = structNew()/>
 
 		<cfset result.status = "unknown"/>
+		<cfset result.message = ""/>
 
 		<cfif not len(_event.getValue("username", "")) or not len(_event.getValue("password", ""))>
 			<cfset result.status = "failure"/>
@@ -30,10 +32,17 @@
 				<cfset user = variables.userService.getUser(username=_event.getValue("username"))/>
 				<cfcatch>
 					<cfset result.status = "failure"/>
-					<cfset result.message = "Please enter a valid username and password."/>
+					<cfset result.message = "Please enter a valid username and password. #cfcatch.message#"/>
 				</cfcatch>
 			</cftry>
 		</cfif>
+		
+		<cfif result.status eq "failure">
+			<cfif structKeyExists(variables, "log") and variables.log.canError()>
+				<cfset variables.log.error(result.message)/>
+			</cfif>
+		</cfif>
+		
 		<cfif not result.status eq "failure">
 			<cfif not user.getIsActive()>
 				<cfset result.status = "failure"/>
