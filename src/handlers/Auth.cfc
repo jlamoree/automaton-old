@@ -59,6 +59,9 @@
 		<cfif result.status eq "success">
 			<cfset setNextEvent("Home.index")/>
 		<cfelse>
+			<cfif structKeyExists(variables, "log") and variables.log.canError()>
+				<cfset variables.log.error(result.message)/>
+			</cfif>
 			<cfset variables.flash.put("result", result)/>
 			<cfset setNextEvent("Auth.index")/>
 		</cfif>
