@@ -9,14 +9,14 @@ CREATE LANGUAGE plpgsql;
 Last Modified Trigger Function
 
 Usage:
-  CREATE TRIGGER last_mod_trigger BEFORE UPDATE ON table_name
-  FOR EACH ROW EXECUTE PROCEDURE set_last_modified();
+  CREATE TRIGGER setModifyDate BEFORE UPDATE ON table_name
+  FOR EACH ROW EXECUTE PROCEDURE setModifyDate();
 
 */
-CREATE OR REPLACE FUNCTION set_last_modified()
+CREATE OR REPLACE FUNCTION setModifyDate()
 RETURNS TRIGGER AS $$
 BEGIN
-   NEW.last_mod_time = now(); 
+   NEW.modifyDate = now(); 
    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

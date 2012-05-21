@@ -13,7 +13,8 @@
 
 			variables.interceptors = [
 				{class="coldbox.system.interceptors.Autowire", properties={}},
-				{class="coldbox.system.interceptors.SES"}
+				{class="coldbox.system.interceptors.SES"},
+				{class="interceptors.AuthSession"}
 			];
 
 			variables.wirebox = {
@@ -29,11 +30,23 @@
 				}
 			};
 
+			variables.flash = {
+				scope = "session",
+				properties = {},
+				inflateToRC = true,
+				autoPurge = true,
+				autoSave = true
+			};
+
 			variables.logbox = {
 				appenders = {
 					console = { class="coldbox.system.logging.appenders.ConsoleAppender" }
 				},
-				root = {levelMin="FATAL", levelMax="INFO", appenders="*"}
+				root = {levelMin="FATAL", levelMax="DEBUG", appenders="*"},
+				categories = {
+					"coldbox.system" = {levelMax="WARN", appenders="console"},
+					"interceptors.AuthSession" = {levelMax="DEBUG", appenders="console"}
+				}
 			};
 
 			variables.mailSettings = {server = "@MAIL_SERVER@"};

@@ -11,7 +11,7 @@ CREATE TABLE users (
   modifyDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 CREATE UNIQUE INDEX user_username ON users (username);
-CREATE TRIGGER last_mod_trigger BEFORE UPDATE ON users
-  FOR EACH ROW EXECUTE PROCEDURE set_last_modified();
+CREATE TRIGGER setModifyDate BEFORE UPDATE ON users
+  FOR EACH ROW EXECUTE PROCEDURE setModifyDate();
 
 
